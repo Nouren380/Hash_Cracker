@@ -1,0 +1,17 @@
+# ===== Web Interface (interface/app.py, templates, static) =====
+Flask>=3.0.0              # core web framework (routes + templates)
+Flask-WTF>=1.2.1          # forms + CSRF protection if you use a form in index.html
+
+# ===== Core (hash_identifier.py, hash_engin.py, validators.py, dictionary_attack.py) =====
+tqdm>=4.66.0              # progress bar while trying wordlist words
+
+# ===== Database (db_manager.py, schema.sql) =====
+# sqlite3 is built into Python, no installation needed
+# If you plan to use SQLAlchemy as an ORM instead of raw SQL in schema.sql:
+SQLAlchemy>=2.0.25
+
+# ===== Config / Environment (config.py, .env.example) =====
+python-dotenv>=1.0.1      # to read environment variables from a .env file
+
+# ===== General =====
+pytest>=8.0.0             # for writing unit tests on Core/*
