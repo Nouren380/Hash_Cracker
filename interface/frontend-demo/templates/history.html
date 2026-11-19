@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}History · Hash Cracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">History</h1>
+  <p class="page-subtitle">Past submissions as reported by the Backend. Records are not stored by this interface.</p>
+</div>
+
+<div class="banner banner-warning" id="history-backend-banner">
+  The Backend has not confirmed persistent storage for this history yet. Records shown may be lost on restart.
+</div>
+<div class="banner banner-error" id="history-error-banner"></div>
+
+<div class="panel">
+  <div id="history-container">
+    <div class="empty-state">
+      <div class="empty-state-title">Loading history</div>
+      <div class="empty-state-body">Fetching past submissions from the Backend.</div>
+    </div>
+  </div>
+</div>
+
+<template id="history-empty-template">
+  <div class="empty-state">
+    <div class="empty-state-title">No history yet</div>
+    <div class="empty-state-body">Submissions will appear here once the Backend has processed at least one hash.</div>
+  </div>
+</template>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Hash Cracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Dashboard</h1>
+  <p class="page-subtitle">An overview of this tool and its current connection to the cracking Backend.</p>
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <h2 class="panel-title">What this tool does</h2>
+  </div>
+  <p class="page-subtitle" style="margin-bottom: 0;">
+    Hash Cracker takes a single hash and attempts to recover the original value using a Dictionary Attack.
+    The Backend runs the attack against its own wordlist and returns a result; this interface only
+    collects the hash and algorithm, and displays what the Backend sends back.
+  </p>
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <h2 class="panel-title">Statistics</h2>
+    <span class="panel-note">Shown only once the Backend provides real figures</span>
+  </div>
+  {% if stats %}
+  <div class="stat-grid">
+    <div class="stat-box">
+      <div class="stat-box-value">{{ stats.total_jobs }}</div>
+      <div class="stat-box-label">Hashes submitted</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-value">{{ stats.total_found }}</div>
+      <div class="stat-box-label">Passwords recovered</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-value">{{ stats.success_rate }}%</div>
+      <div class="stat-box-label">Success rate</div>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-title">No statistics yet</div>
+    <div class="empty-state-body">
+      Statistics appear here once the Backend is connected and has processed real submissions.
+      This page never shows invented numbers.
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <h2 class="panel-title">Get started</h2>
+  </div>
+  <p class="page-subtitle">Submit a hash for a Dictionary Attack, or review past activity.</p>
+  <a class="btn" href="{{ url_for('crack') }}">
+    <span class="btn-label">Crack a hash</span>
+  </a>
+</div>
+{% endblock %}

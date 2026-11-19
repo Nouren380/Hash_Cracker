@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Results · Hash Cracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Results</h1>
+  <p class="page-subtitle">The outcome of the most recent submission, exactly as returned by the Backend.</p>
+</div>
+
+<div id="results-container"></div>
+
+<template id="result-template">
+  <div class="result-card">
+    <div class="result-card-top">
+      <span class="result-state" data-field="state"></span>
+      <a class="btn btn-secondary" href="{{ url_for('crack') }}">Submit another hash</a>
+    </div>
+    <div class="kv-grid">
+      <div class="kv-key">Submitted hash</div>
+      <div class="kv-value" data-field="hash"></div>
+      <div class="kv-key">Algorithm</div>
+      <div class="kv-value plain" data-field="algorithm"></div>
+      <div class="kv-key">Recovered password</div>
+      <div class="kv-value" data-field="password"></div>
+      <div class="kv-key">Processing time</div>
+      <div class="kv-value plain" data-field="duration"></div>
+    </div>
+  </div>
+</template>
+
+<template id="results-empty-template">
+  <div class="panel">
+    <div class="empty-state">
+      <div class="empty-state-title">No result to show yet</div>
+      <div class="empty-state-body">Submit a hash from the Crack a hash page to see its outcome here.</div>
+    </div>
+  </div>
+</template>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/results.js') }}"></script>
+{% endblock %}

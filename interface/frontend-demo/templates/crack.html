@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Crack a hash · Hash Cracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Crack a hash</h1>
+  <p class="page-subtitle">Submit a single hash. The Backend runs a Dictionary Attack against its own wordlist and returns the outcome.</p>
+</div>
+
+<div class="banner banner-error" id="submit-error-banner"></div>
+
+<div class="panel">
+  <form id="crack-form" novalidate>
+    <div class="field" id="hash-field">
+      <label class="field-label" for="hash-input">Hash value</label>
+      <textarea class="input" id="hash-input" name="hash" placeholder="Paste the hash you want to crack" required></textarea>
+      <div class="field-error" id="hash-error"></div>
+    </div>
+
+    <div class="field" id="algorithm-field">
+      <label class="field-label" for="algorithm-select">Hash algorithm</label>
+      <select class="select" id="algorithm-select" name="algorithm">
+        {% for algorithm in algorithms %}
+        <option value="{{ algorithm.id }}">{{ algorithm.label }}</option>
+        {% endfor %}
+      </select>
+      <div class="field-hint">The algorithm list is centralized and awaiting final confirmation from the Backend team.</div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Attack method</label>
+      <div class="method-locked">
+        <span>Dictionary Attack</span>
+        <span class="method-locked-tag">only method</span>
+      </div>
+      <div class="field-hint">The wordlist used is managed entirely by the Backend and is not configurable here.</div>
+    </div>
+
+    <button class="btn" type="submit" id="submit-button">
+      <span class="spinner"></span>
+      <span class="btn-label">Submit for cracking</span>
+    </button>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/crack.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Settings · Hash Cracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Settings</h1>
+  <p class="page-subtitle">Preferences that belong to this interface only. Nothing here changes Backend behavior.</p>
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <h2 class="panel-title">Connection</h2>
+  </div>
+  <div class="status-row">
+    <span class="status-dot" id="connection-dot"></span>
+    <span id="connection-label">Checking connection mode...</span>
+  </div>
+  <p class="field-hint">
+    This shows whether the interface is pointed at the live Backend API or at mock data for Frontend testing.
+    It is informational only and cannot be changed from this page.
+  </p>
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <h2 class="panel-title">Interface preferences</h2>
+  </div>
+  <div class="toggle-row">
+    <div class="toggle-row-text">
+      <strong>Compact tables</strong>
+      <span>Reduce row height in History and Reports tables.</span>
+    </div>
+    <button class="switch" id="toggle-compact" type="button" aria-pressed="false"></button>
+  </div>
+  <div class="toggle-row">
+    <div class="toggle-row-text">
+      <strong>Show field hints</strong>
+      <span>Display the helper text under form fields.</span>
+    </div>
+    <button class="switch on" id="toggle-hints" type="button" aria-pressed="true"></button>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}
