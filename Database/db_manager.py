@@ -240,19 +240,28 @@ class DBManager:
         )
         self.conn.commit()
 
-    def start_running(self, session_id: int, wordlist_id: int) -> None:
-        """Transition session to running state with associated wordlist."""
-        self.conn.execute(
-            """UPDATE cracking_sessions
-               SET wordlist_id = ?, status = 'running'
-               WHERE id = ?""",
-            (wordlist_id, session_id)
-        )
+    def start_running(self, session_id: int,
+                      wordlist_id: Optional[int] = None) -> None:
+        """Transition session to running state, optionally with associated wordlist."""
+        if wordlist_id is not None:
+            self.conn.execute(
+                """UPDATE cracking_sessions
+                   SET wordlist_id = ?, status = 'running'
+                   WHERE id = ?""",
+                (wordlist_id, session_id)
+            )
+        else:
+            self.conn.execute(
+                """UPDATE cracking_sessions
+                   SET status = 'running'
+                   WHERE id = ?""",
+                (session_id,)
+            )
         self.conn.commit()
 
     def mark_found(self, session_id: int,
                    password: str,
-                   attempts_count: int,
+                   attempts_count: int = 0,
                    duration_ms: float = 0.0) -> None:
         """Mark session successful with cracked password, attempts, and duration."""
         self.conn.execute(
@@ -274,7 +283,7 @@ class DBManager:
         self.conn.commit()
 
     def mark_not_found(self, session_id: int,
-                       attempts_count: int,
+                       attempts_count: int = 0,
                        duration_ms: float = 0.0) -> None:
         """Mark session completed without finding matching password."""
         self._set_status(
@@ -350,6 +359,12 @@ class DBManager:
                 attempt_order
             )
         )
+        self.conn.execute(
+            """UPDATE cracking_sessions
+               SET attempts_count = attempts_count + 1
+               WHERE id = ?""",
+            (session_id,)
+        )
         self.conn.commit()
 
     def log_attempts_batch(self, session_id: int,
@@ -371,6 +386,12 @@ class DBManager:
                (session_id, candidate_word, generated_hash, is_match, attempt_order)
                VALUES (?, ?, ?, ?, ?)""",
             prepared_data
+        )
+        self.conn.execute(
+            """UPDATE cracking_sessions
+               SET attempts_count = attempts_count + ?
+               WHERE id = ?""",
+            (len(prepared_data), session_id)
         )
         self.conn.commit()
         return len(prepared_data)
