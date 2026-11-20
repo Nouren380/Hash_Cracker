@@ -107,8 +107,11 @@ with DBManager() as db:
 - `mark_wordlist_not_found(session_id)`: Marks session `wordlist_not_found`.
 
 ### Candidate Attempt Logging
-- `log_attempt(session_id, candidate_word, generated_hash, is_match, attempt_order)`: Log a single candidate trial.
+- `log_attempt(session_id, candidate_word, generated_hash, is_match, attempt_order)`: Log a single candidate trial and auto-increment session attempt count.
 - `log_attempts_batch(session_id, attempts)`: High-performance batch insertion using `executemany` for large wordlists.
+
+### Dictionary Attack Integration Bridge
+- `run_tracked_attack(target_hash, wordlist_path=None) -> Optional[str]`: Directly executes and tracks a dictionary attack in the database following the project flowchart, keeping external core modules decoupled.
 
 ### Frontend & API Contract Helpers
 - `get_history(limit=50, offset=0)`: Formatted specifically for `GET /api/history` matching `API_CONTRACT.md`.

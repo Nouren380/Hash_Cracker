@@ -406,6 +406,108 @@ class DBManager:
         ).fetchall()
 
     # -------------------------------------------------------------------------
+    # Dictionary Attack Integration Bridge
+    # -------------------------------------------------------------------------
+    def run_tracked_attack(self, target_hash: str, wordlist_path: Optional[str] = None) -> Optional[str]:
+        """
+        Integration bridge: Executes and records a dictionary attack session
+        directly into the database, adhering to the project flowchart without
+        requiring modifications to external core modules.
+
+        Args:
+            target_hash: The target cryptographic hash.
+            wordlist_path: Optional path to wordlist (defaults to Core/password_list.txt).
+
+        Returns:
+            The cracked plaintext password if found, otherwise None.
+        """
+        import hashlib
+        import time
+
+        clean_hash = str(target_hash).strip() if target_hash else ""
+        session_id = self.create_session(clean_hash)
+        start_time = time.time()
+
+        # Step 1: Validate input
+        if not clean_hash or any(c.isspace() for c in clean_hash) or not all(c in "0123456789abcdefABCDEF" for c in clean_hash):
+            self.mark_invalid_hash(session_id)
+            return None
+
+        # Step 2: Identify algorithm from database
+        algo_row = self.get_algorithm_by_length(len(clean_hash))
+        if not algo_row:
+            self.mark_unsupported_algorithm(session_id)
+            return None
+
+        algo_id = algo_row["id"]
+        algo_name = algo_row["name"].upper()
+        self.set_algorithm(session_id, detected_algorithm_id=algo_id, selected_algorithm_id=algo_id)
+
+        # Step 3: Load wordlist
+        default_wl = os.path.join(os.path.dirname(__file__), "..", "Core", "password_list.txt")
+        wl_path = wordlist_path or default_wl
+
+        if not os.path.isfile(wl_path):
+            self.mark_wordlist_not_found(session_id)
+            return None
+
+        try:
+            with open(wl_path, "r", encoding="utf-8", errors="ignore") as f:
+                passwords = [line.strip() for line in f if line.strip()]
+        except Exception:
+            self.mark_wordlist_not_found(session_id)
+            return None
+
+        wordlist_id = self.add_wordlist(
+            name=os.path.basename(wl_path),
+            file_path=os.path.abspath(wl_path),
+            word_count=len(passwords)
+        )
+        self.start_running(session_id, wordlist_id)
+
+        # Step 4: Iterate and compare
+        target_lower = clean_hash.lower()
+        batch = []
+        attempt_order = 0
+
+        for pwd in passwords:
+            attempt_order += 1
+            hashed = None
+            if algo_name == "MD5":
+                hashed = hashlib.md5(pwd.encode("utf-8")).hexdigest()
+            elif algo_name == "SHA-1":
+                hashed = hashlib.sha1(pwd.encode("utf-8")).hexdigest()
+            elif algo_name == "SHA-256":
+                hashed = hashlib.sha256(pwd.encode("utf-8")).hexdigest()
+            elif algo_name == "SHA-512":
+                hashed = hashlib.sha512(pwd.encode("utf-8")).hexdigest()
+
+            if not hashed:
+                continue
+
+            is_match = (hashed.lower() == target_lower)
+            batch.append((pwd, hashed, is_match, attempt_order))
+
+            if len(batch) >= 200:
+                self.log_attempts_batch(session_id, batch)
+                batch.clear()
+
+            if is_match:
+                duration_ms = round((time.time() - start_time) * 1000.0, 2)
+                if batch:
+                    self.log_attempts_batch(session_id, batch)
+                    batch.clear()
+                self.mark_found(session_id, password=pwd, attempts_count=attempt_order, duration_ms=duration_ms)
+                return pwd
+
+        duration_ms = round((time.time() - start_time) * 1000.0, 2)
+        if batch:
+            self.log_attempts_batch(session_id, batch)
+            batch.clear()
+        self.mark_not_found(session_id, attempts_count=attempt_order, duration_ms=duration_ms)
+        return None
+
+    # -------------------------------------------------------------------------
     # Frontend Integration & Analytics API Helpers
     # Matches interface/frontend-demo/docs/API_CONTRACT.md
     # -------------------------------------------------------------------------

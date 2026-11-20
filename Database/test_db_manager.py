@@ -158,6 +158,27 @@ class TestDBManager(unittest.TestCase):
         self.assertIn("totalJobs", reports[0])
         self.assertIn("totalFound", reports[0])
 
+    def test_run_tracked_attack_integration(self):
+        """Test the integrated attack runner bridge in DBManager."""
+        import tempfile
+        with tempfile.NamedTemporaryFile("w+", delete=False, encoding="utf-8") as tf:
+            tf.write("pass\n123456\nadmin\n")
+            wl_path = tf.name
+
+        try:
+            # MD5 for "123456"
+            md5_hash = "e10adc3949ba59abbe56e057f20f883e"
+            found = self.db.run_tracked_attack(md5_hash, wordlist_path=wl_path)
+            self.assertEqual(found, "123456")
+
+            session = self.db.get_all_sessions()[0]
+            self.assertEqual(session["status"], "found")
+            self.assertEqual(session["cracked_password"], "123456")
+            self.assertGreater(session["attempts_count"], 0)
+        finally:
+            if os.path.exists(wl_path):
+                os.remove(wl_path)
+
     def test_context_manager(self):
         """Test DBManager with 'with' statement."""
         with DBManager(db_path=":memory:") as manager:
