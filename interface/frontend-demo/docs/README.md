@@ -84,3 +84,13 @@ Backend and API are connected:
   `confirmedByBackend: false`).
 
 See `TESTING_REPORT.md` for exactly what was tested and how.
+
+## Redesigned interface
+
+The primary navigation focuses on Dashboard, Crack a hash, and Results. History, Reports,
+and Settings routes are retained for future backend integration but are not in the main navigation.
+The development server and JavaScript-only mock show a demo notice; neither connects to the real
+cracking engine. Hash-type suggestions compare hexadecimal length with the interface's current
+algorithm list, so they are only possibilities and never automatically select an algorithm.
+The copy button uses the browser clipboard where available. Processing feedback is indeterminate:
+the draft backend contract does not supply live progress or a cancellation endpoint.
