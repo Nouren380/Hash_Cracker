@@ -39,6 +39,35 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(self.client.post('/api/crack', json=payload).status_code, 400)
         self.assertEqual(len(self.client.get('/api/history').json['records']), 1)
 
+    def test_history_clear_and_no_candidate_logging(self):
+        digest = hashlib.md5(b"123456").hexdigest()
+        self.assertEqual(self.client.post('/api/crack', json={'hash': digest, 'algorithm': 'md5'}).status_code, 200)
+        with module.database() as db:
+            session = db.get_all_sessions()[0]
+            self.assertEqual(session['attempts_count'], 2)
+            self.assertEqual(db.get_attempts_for_session(session['id']), [])
+            db.log_attempt(session['id'], 'legacy', 'abcd', False, 1)
+        response = self.client.delete('/api/history')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['deleted'], 1)
+        self.assertEqual(self.client.get('/api/history').json['records'], [])
+        with module.database() as db:
+            self.assertEqual(db.conn.execute('SELECT COUNT(*) FROM attempts_log').fetchone()[0], 0)
+
+    def test_clear_refuses_active_session(self):
+        with module.database() as db:
+            sid = db.create_session('f' * 32)
+            db.start_running(sid)
+        response = self.client.delete('/api/history')
+        self.assertEqual(response.status_code, 409)
+        with module.database() as db:
+            self.assertIsNotNone(db.get_session(sid))
+
+    def test_invalid_wordlist_encoding_is_error(self):
+        self.wordlist.write_bytes(b'valid\n\xff')
+        response = self.client.post('/api/crack', json={'hash': 'f' * 32, 'algorithm': 'md5'})
+        self.assertEqual(response.status_code, 503)
+
     def test_missing_wordlist_and_pages(self):
         self.wordlist.unlink()
         self.assertEqual(self.client.post('/api/crack', json={'hash':'f'*32,'algorithm':'md5'}).status_code, 503)

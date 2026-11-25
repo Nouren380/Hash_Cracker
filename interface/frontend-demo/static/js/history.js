@@ -3,6 +3,8 @@
   const emptyTemplate = document.getElementById("history-empty-template");
   const errorBanner = document.getElementById("history-error-banner");
   const backendBanner = document.getElementById("history-backend-banner");
+  const clearButton = document.getElementById("clear-history");
+  const message = document.getElementById("history-message");
 
   function renderTable(records) {
     const table = document.createElement("table");
@@ -37,6 +39,7 @@
     try {
       const response = await HashCrackerApi.fetchHistory();
       backendBanner.classList.toggle("is-visible", response.backendConnected === false);
+      clearButton.hidden = ApiMode.current === "mock" || response.backendConnected !== true || !response.records || response.records.length === 0;
 
       if (!response.records || response.records.length === 0) {
         container.innerHTML = "";
@@ -51,6 +54,21 @@
       errorBanner.classList.add("is-visible");
     }
   }
+
+  clearButton.addEventListener("click", async () => {
+    if (!window.confirm("Delete all saved sessions, recovered values and associated attempt logs? Reports based on this history will also be cleared. This cannot be undone.")) return;
+    clearButton.disabled = true;
+    errorBanner.classList.remove("is-visible");
+    try {
+      await HashCrackerApi.clearHistory();
+      sessionStorage.removeItem("hashCrackerLastResult");
+      message.textContent = "History cleared.";
+      await load();
+    } catch (err) {
+      errorBanner.textContent = err.message || "Could not clear history.";
+      errorBanner.classList.add("is-visible");
+    } finally { clearButton.disabled = false; }
+  });
 
   load();
 })();

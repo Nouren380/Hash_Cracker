@@ -444,69 +444,54 @@ class DBManager:
         algo_name = algo_row["name"].upper()
         self.set_algorithm(session_id, detected_algorithm_id=algo_id, selected_algorithm_id=algo_id)
 
-        # Step 3: Load wordlist
+        # Stream candidates instead of loading the entire wordlist into memory.
+        # Candidate values are not persisted; only the session outcome is stored.
         default_wl = os.path.join(os.path.dirname(__file__), "..", "Core", "password_list.txt")
         wl_path = wordlist_path or default_wl
-
-        if not os.path.isfile(wl_path):
-            self.mark_wordlist_not_found(session_id)
-            return session_id if return_session else None
-
         try:
-            with open(wl_path, "r", encoding="utf-8", errors="ignore") as f:
-                passwords = [line.strip() for line in f if line.strip()]
-        except Exception:
+            wordlist = open(wl_path, "r", encoding="utf-8", errors="strict")
+        except (OSError, UnicodeError):
             self.mark_wordlist_not_found(session_id)
             return session_id if return_session else None
 
         wordlist_id = self.add_wordlist(
-            name=os.path.basename(wl_path),
-            file_path=os.path.abspath(wl_path),
-            word_count=len(passwords)
+            name=os.path.basename(wl_path), file_path=os.path.abspath(wl_path)
         )
         self.start_running(session_id, wordlist_id)
-
-        # Step 4: Iterate and compare
         target_lower = clean_hash.lower()
-        batch = []
+        hash_name = {"MD5": "md5", "SHA-1": "sha1", "SHA-256": "sha256", "SHA-512": "sha512"}[algo_name]
         attempt_order = 0
-
-        for pwd in passwords:
-            attempt_order += 1
-            hashed = None
-            if algo_name == "MD5":
-                hashed = hashlib.md5(pwd.encode("utf-8")).hexdigest()
-            elif algo_name == "SHA-1":
-                hashed = hashlib.sha1(pwd.encode("utf-8")).hexdigest()
-            elif algo_name == "SHA-256":
-                hashed = hashlib.sha256(pwd.encode("utf-8")).hexdigest()
-            elif algo_name == "SHA-512":
-                hashed = hashlib.sha512(pwd.encode("utf-8")).hexdigest()
-
-            if not hashed:
-                continue
-
-            is_match = (hashed.lower() == target_lower)
-            batch.append((pwd, hashed, is_match, attempt_order))
-
-            if len(batch) >= 200:
-                self.log_attempts_batch(session_id, batch)
-                batch.clear()
-
-            if is_match:
-                duration_ms = round((time.time() - start_time) * 1000.0, 2)
-                if batch:
-                    self.log_attempts_batch(session_id, batch)
-                    batch.clear()
-                self.mark_found(session_id, password=pwd, attempts_count=attempt_order, duration_ms=duration_ms)
-                return session_id if return_session else pwd
-
+        try:
+            with wordlist:
+                for line in wordlist:
+                    pwd = line.strip()
+                    if not pwd:
+                        continue
+                    attempt_order += 1
+                    hashed = hashlib.new(hash_name, pwd.encode("utf-8")).hexdigest()
+                    if hashed == target_lower:
+                        duration_ms = round((time.time() - start_time) * 1000.0, 2)
+                        self.mark_found(session_id, password=pwd, attempts_count=attempt_order, duration_ms=duration_ms)
+                        return session_id if return_session else pwd
+        except (OSError, UnicodeError):
+            self.mark_wordlist_not_found(session_id)
+            return session_id if return_session else None
         duration_ms = round((time.time() - start_time) * 1000.0, 2)
-        if batch:
-            self.log_attempts_batch(session_id, batch)
-            batch.clear()
         self.mark_not_found(session_id, attempts_count=attempt_order, duration_ms=duration_ms)
         return session_id if return_session else None
+
+    def clear_history(self) -> int:
+        """Delete finished sessions and their candidate logs; refuse during an active run."""
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            if self.conn.execute("SELECT 1 FROM cracking_sessions WHERE status IN ('pending', 'running') LIMIT 1").fetchone():
+                raise RuntimeError("An attack is still running. Wait for it to finish before clearing history.")
+            cursor = self.conn.execute("DELETE FROM cracking_sessions")
+            self.conn.commit()
+            return cursor.rowcount
+        except Exception:
+            self.conn.rollback()
+            raise
 
     # -------------------------------------------------------------------------
     # Frontend Integration & Analytics API Helpers

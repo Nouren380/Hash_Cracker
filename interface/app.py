@@ -74,6 +74,15 @@ def api_history():
     with database() as db:
         return jsonify({"records": db.get_history(), "backendConnected": True})
 
+@app.delete("/api/history")
+def api_clear_history():
+    try:
+        with database() as db:
+            deleted = db.clear_history()
+        return jsonify({"deleted": deleted})
+    except RuntimeError as exc:
+        return error(str(exc), 409)
+
 @app.get("/api/reports")
 def api_reports():
     with database() as db:

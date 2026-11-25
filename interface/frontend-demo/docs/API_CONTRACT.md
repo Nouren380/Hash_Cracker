@@ -136,3 +136,9 @@ GET /api/reports
 - It will not expose Wordlist selection, upload, or configuration anywhere in the UI or API
   payloads.
 - It will not offer a Brute Force option anywhere.
+
+## Clear saved history (integrated local app)
+
+`DELETE /api/history` deletes saved sessions, recovered values and associated candidate logs. Reports based on those sessions change as a result. It returns `{"deleted": 3}` on success or HTTP 409 if an attack is pending or running. The UI asks for confirmation before issuing this request. The JavaScript-only mock does not support deletion.
+
+Real attacks stream the wordlist without recording individual candidates; old candidate logs are removed when their sessions are cleared. The integrated app handles attacks synchronously, so interrupted connections can leave a server task running.

@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-The **Database Subsystem** provides persistent storage, analytical tracking, and audit logging for the **Hash Cracker** tool. It records every cracking session, tracks the selected cryptographic algorithms, logs individual password dictionary candidate attempts, and generates statistics for the web interface and reporting API.
+The **Database Subsystem** provides persistent storage, analytical tracking, and audit logging for the **Hash Cracker** tool. It records every cracking session, tracks the selected cryptographic algorithms, can log individual dictionary candidates explicitly, and generates statistics for the web interface and reporting API.
 
 ---
 
@@ -109,6 +109,8 @@ with DBManager() as db:
 ### Candidate Attempt Logging
 - `log_attempt(session_id, candidate_word, generated_hash, is_match, attempt_order)`: Log a single candidate trial and auto-increment session attempt count.
 - `log_attempts_batch(session_id, attempts)`: High-performance batch insertion using `executemany` for large wordlists.
+
+By default `run_tracked_attack` streams the wordlist and does not log candidate values. The explicit logging methods remain available for callers that need them.
 
 ### Dictionary Attack Integration Bridge
 - `run_tracked_attack(target_hash, wordlist_path=None) -> Optional[str]`: Directly executes and tracks a dictionary attack in the database following the project flowchart, keeping external core modules decoupled.

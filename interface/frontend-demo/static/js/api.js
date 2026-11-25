@@ -23,7 +23,8 @@ class ApiError extends Error {
 async function apiRequest(path, options) {
   const url = ApiConfig.baseUrl + path;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), ApiConfig.timeoutMs);
+  // Attacks may take longer than a normal request. Do not abort them on a fixed timer.
+  const timeoutId = options.method === "POST" ? null : setTimeout(() => controller.abort(), ApiConfig.timeoutMs);
 
   let response;
   try {
@@ -38,7 +39,7 @@ async function apiRequest(path, options) {
     if (err.name === "AbortError") {
       throw new ApiError("The request to the server timed out.", "network");
     }
-    throw new ApiError("Could not reach the server. Check that the Backend is running.", "network");
+    throw new ApiError(options.method === "POST" ? "The connection was interrupted. The attack may still finish; check History before trying again." : "Could not reach the server. Check that the Backend is running.", "network");
   }
   clearTimeout(timeoutId);
 
@@ -73,6 +74,11 @@ const HashCrackerApi = {
       return MockApi.fetchHistory();
     }
     return apiRequest(ApiConfig.endpoints.history, { method: "GET" });
+  },
+
+  clearHistory() {
+    if (ApiMode.current === "mock") { throw new ApiError("Clearing history is unavailable in mock mode.", "server"); }
+    return apiRequest(ApiConfig.endpoints.history, { method: "DELETE" });
   },
 
   fetchReports() {
