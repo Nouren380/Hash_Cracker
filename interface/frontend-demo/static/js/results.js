@@ -26,7 +26,8 @@
     const algorithm = AlgorithmConfig.byId(result.algorithm);
     node.querySelector('[data-field="algorithm"]').textContent = algorithm ? algorithm.label : (result.algorithm || 'Not reported');
     const password = typeof result.password === 'string' ? result.password : null;
-    node.querySelector('[data-field="password"]').textContent = password !== null ? password : 'Not recovered';
+    node.querySelector('[data-field="result-label"]').textContent = result.status === 'found' ? 'RECOVERED PASSWORD' : 'RESULT';
+    node.querySelector('[data-field="password"]').textContent = result.status === 'found' && password !== null ? password : result.status === 'not_found' ? 'Not found' : result.status === 'processing' ? 'Processing' : 'Not available';
     node.querySelector('[data-field="duration"]').textContent = Number.isFinite(result.durationMs) ? `${result.durationMs} ms` : 'Not reported';
     const copy = node.querySelector('[data-field="copy"]');
     const message = node.querySelector('[data-field="copy-message"]');
