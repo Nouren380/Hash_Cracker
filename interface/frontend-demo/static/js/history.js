@@ -16,13 +16,15 @@
     records.forEach(function (record) {
       const row = document.createElement("tr");
       const algorithm = AlgorithmConfig.byId(record.algorithm);
-      row.innerHTML = `
-        <td class="mono">${record.hash}</td>
-        <td>${algorithm ? algorithm.label : record.algorithm}</td>
-        <td>${record.status === "found" ? "Found" : "Not found"}</td>
-        <td class="mono">${record.password || "-"}</td>
-        <td>${new Date(record.submittedAt).toLocaleString()}</td>
-      `;
+      const values = [record.hash, algorithm ? algorithm.label : record.algorithm,
+        record.status === "found" ? "Found" : record.status === "not_found" ? "Not found" : record.status,
+        record.password == null ? "-" : record.password, record.submittedAt || "-"];
+      values.forEach((value, index) => {
+        const cell = document.createElement("td");
+        cell.textContent = value == null ? "-" : String(value);
+        if (index === 0 || index === 3) cell.className = "mono";
+        row.appendChild(cell);
+      });
       tbody.appendChild(row);
     });
     table.appendChild(tbody);

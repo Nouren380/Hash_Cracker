@@ -1,7 +1,11 @@
 import hashlib
-from hash_identifier_2 import identify_hash
+try:
+    from .hash_identifier import identify_hash
+except ImportError:
+    from hash_identifier import identify_hash
+from pathlib import Path
 
-def dictionary_attack(target_hash: str, wordlist_path: str = "password_list_3.txt") -> str | None:
+def dictionary_attack(target_hash: str, wordlist_path: str = str(Path(__file__).with_name("password_list.txt"))) -> str | None:
     """
     Implements the dictionary attack flow:
     1. Validate & Analyze Hash
@@ -70,4 +74,4 @@ if __name__ == "__main__":
     # تجربة عملية مطابقة للفلوشارت
     sample_target = "e10adc3949ba59abbe56e057f20f883e" # الـ MD5 بتاع كلمة 123456
     print(f"Target Hash: {sample_target}")
-    dictionary_attack(sample_target, wordlist_path="password_list_3.txt")
+    dictionary_attack(sample_target, wordlist_path=str(Path(__file__).with_name("password_list.txt")))

@@ -408,7 +408,8 @@ class DBManager:
     # -------------------------------------------------------------------------
     # Dictionary Attack Integration Bridge
     # -------------------------------------------------------------------------
-    def run_tracked_attack(self, target_hash: str, wordlist_path: Optional[str] = None) -> Optional[str]:
+    def run_tracked_attack(self, target_hash: str, wordlist_path: Optional[str] = None,
+                           algorithm: Optional[str] = None, return_session: bool = False):
         """
         Integration bridge: Executes and records a dictionary attack session
         directly into the database, adhering to the project flowchart without
@@ -431,13 +432,13 @@ class DBManager:
         # Step 1: Validate input
         if not clean_hash or any(c.isspace() for c in clean_hash) or not all(c in "0123456789abcdefABCDEF" for c in clean_hash):
             self.mark_invalid_hash(session_id)
-            return None
+            return session_id if return_session else None
 
         # Step 2: Identify algorithm from database
-        algo_row = self.get_algorithm_by_length(len(clean_hash))
-        if not algo_row:
+        algo_row = self.get_algorithm_by_name(algorithm) if algorithm else self.get_algorithm_by_length(len(clean_hash))
+        if not algo_row or algo_row["hash_length"] != len(clean_hash):
             self.mark_unsupported_algorithm(session_id)
-            return None
+            return session_id if return_session else None
 
         algo_id = algo_row["id"]
         algo_name = algo_row["name"].upper()
@@ -449,14 +450,14 @@ class DBManager:
 
         if not os.path.isfile(wl_path):
             self.mark_wordlist_not_found(session_id)
-            return None
+            return session_id if return_session else None
 
         try:
             with open(wl_path, "r", encoding="utf-8", errors="ignore") as f:
                 passwords = [line.strip() for line in f if line.strip()]
         except Exception:
             self.mark_wordlist_not_found(session_id)
-            return None
+            return session_id if return_session else None
 
         wordlist_id = self.add_wordlist(
             name=os.path.basename(wl_path),
@@ -498,14 +499,14 @@ class DBManager:
                     self.log_attempts_batch(session_id, batch)
                     batch.clear()
                 self.mark_found(session_id, password=pwd, attempts_count=attempt_order, duration_ms=duration_ms)
-                return pwd
+                return session_id if return_session else pwd
 
         duration_ms = round((time.time() - start_time) * 1000.0, 2)
         if batch:
             self.log_attempts_batch(session_id, batch)
             batch.clear()
         self.mark_not_found(session_id, attempts_count=attempt_order, duration_ms=duration_ms)
-        return None
+        return session_id if return_session else None
 
     # -------------------------------------------------------------------------
     # Frontend Integration & Analytics API Helpers
@@ -536,7 +537,7 @@ class DBManager:
             history_records.append({
                 "id": f"h{row['id']}",
                 "hash": row["target_hash"],
-                "algorithm": (row["algorithm"] or "").lower(),
+                "algorithm": (row["algorithm"] or "").lower().replace("-", ""),
                 "status": row["status"],
                 "password": row["cracked_password"],
                 "submittedAt": row["started_at"],

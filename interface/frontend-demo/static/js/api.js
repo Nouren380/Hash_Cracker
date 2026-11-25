@@ -5,7 +5,7 @@ const ApiConfig = {
     history: "/history",
     reports: "/reports"
   },
-  timeoutMs: 15000
+  timeoutMs: 120000
 };
 
 const ApiMode = {
