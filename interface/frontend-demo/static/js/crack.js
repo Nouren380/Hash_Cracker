@@ -10,6 +10,12 @@
   const errorBanner = document.getElementById('submit-error-banner');
   let isSubmitting = false;
 
+  function clearFieldError() {
+    hashField.classList.remove('has-error');
+    hashInput.removeAttribute('aria-invalid');
+    hashError.textContent = '';
+  }
+
   function updateSuggestion() {
     const hash = hashInput.value.trim();
     if (!hash) { suggestion.textContent = 'Not sure about the algorithm? Paste a hash to see possible matches.'; return; }
@@ -20,15 +26,42 @@
       : 'No algorithm in the current list matches this length. Check the hash and algorithm.';
   }
 
-  hashInput.addEventListener('input', () => { hashField.classList.remove('has-error'); hashInput.removeAttribute('aria-invalid'); hashError.textContent = ''; updateSuggestion(); });
+  // تشغيل مبدئي عشان الرسالة تظهر من أول ما الصفحة تفتح
+  updateSuggestion();
+
+  hashInput.addEventListener('input', () => {
+    clearFieldError();
+    updateSuggestion();
+  });
+
+  // مسح الخطأ لو المستخدم غيّر الخوارزمية
+  algorithmSelect.addEventListener('change', () => {
+    clearFieldError();
+    updateSuggestion();
+  });
+
   form.addEventListener('submit', async event => {
     event.preventDefault();
     if (isSubmitting) return;
-    errorBanner.classList.remove('is-visible'); errorBanner.textContent = '';
-    hashField.classList.remove('has-error'); hashInput.removeAttribute('aria-invalid'); hashError.textContent = '';
+
+    errorBanner.classList.remove('is-visible');
+    errorBanner.textContent = '';
+    clearFieldError();
+
     const outcome = HashValidation.validate(hashInput.value, algorithmSelect.value);
-    if (!outcome.valid) { hashField.classList.add('has-error'); hashInput.setAttribute('aria-invalid', 'true'); hashError.textContent = outcome.message; hashInput.focus(); return; }
-    isSubmitting = true; submitButton.disabled = true; submitButton.classList.add('is-loading'); loadingMessage.hidden = false;
+    if (!outcome.valid) {
+      hashField.classList.add('has-error');
+      hashInput.setAttribute('aria-invalid', 'true');
+      hashError.textContent = outcome.message;
+      hashInput.focus();
+      return;
+    }
+
+    isSubmitting = true;
+    submitButton.disabled = true;
+    submitButton.classList.add('is-loading');
+    loadingMessage.hidden = false;
+
     try {
       const result = await HashCrackerApi.submitHash(outcome.normalized, algorithmSelect.value);
       sessionStorage.setItem('hashCrackerLastResult', JSON.stringify(result));
@@ -38,6 +71,11 @@
     } catch (error) {
       errorBanner.textContent = error && error.message ? error.message : 'Something went wrong while submitting the hash.';
       errorBanner.classList.add('is-visible');
-    } finally { isSubmitting = false; submitButton.disabled = false; submitButton.classList.remove('is-loading'); loadingMessage.hidden = true; }
+    } finally {
+      isSubmitting = false;
+      submitButton.disabled = false;
+      submitButton.classList.remove('is-loading');
+      loadingMessage.hidden = true;
+    }
   });
 })();
