@@ -46,7 +46,7 @@ ALGORITHMS = [
 
 
 def render(template_name, **kwargs):
-    return render_template(template_name, algorithms=ALGORITHMS, **kwargs)
+    return render_template(template_name, algorithms=ALGORITHMS, demo_backend=True, **kwargs)
 
 
 @app.route("/")

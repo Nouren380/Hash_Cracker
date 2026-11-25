@@ -3,6 +3,8 @@
   const emptyTemplate = document.getElementById("history-empty-template");
   const errorBanner = document.getElementById("history-error-banner");
   const backendBanner = document.getElementById("history-backend-banner");
+  const clearButton = document.getElementById("clear-history");
+  const message = document.getElementById("history-message");
 
   function renderTable(records) {
     const table = document.createElement("table");
@@ -16,13 +18,15 @@
     records.forEach(function (record) {
       const row = document.createElement("tr");
       const algorithm = AlgorithmConfig.byId(record.algorithm);
-      row.innerHTML = `
-        <td class="mono">${record.hash}</td>
-        <td>${algorithm ? algorithm.label : record.algorithm}</td>
-        <td>${record.status === "found" ? "Found" : "Not found"}</td>
-        <td class="mono">${record.password || "-"}</td>
-        <td>${new Date(record.submittedAt).toLocaleString()}</td>
-      `;
+      const values = [record.hash, algorithm ? algorithm.label : record.algorithm,
+        record.status === "found" ? "Found" : record.status === "not_found" ? "Not found" : record.status,
+        record.password == null ? "-" : record.password, record.submittedAt || "-"];
+      values.forEach((value, index) => {
+        const cell = document.createElement("td");
+        cell.textContent = value == null ? "-" : String(value);
+        if (index === 0 || index === 3) cell.className = "mono";
+        row.appendChild(cell);
+      });
       tbody.appendChild(row);
     });
     table.appendChild(tbody);
@@ -35,6 +39,7 @@
     try {
       const response = await HashCrackerApi.fetchHistory();
       backendBanner.classList.toggle("is-visible", response.backendConnected === false);
+      clearButton.hidden = ApiMode.current === "mock" || response.backendConnected !== true || !response.records || response.records.length === 0;
 
       if (!response.records || response.records.length === 0) {
         container.innerHTML = "";
@@ -49,6 +54,21 @@
       errorBanner.classList.add("is-visible");
     }
   }
+
+  clearButton.addEventListener("click", async () => {
+    if (!window.confirm("Delete all saved sessions, recovered values and associated attempt logs? Reports based on this history will also be cleared. This cannot be undone.")) return;
+    clearButton.disabled = true;
+    errorBanner.classList.remove("is-visible");
+    try {
+      await HashCrackerApi.clearHistory();
+      sessionStorage.removeItem("hashCrackerLastResult");
+      message.textContent = "History cleared.";
+      await load();
+    } catch (err) {
+      errorBanner.textContent = err.message || "Could not clear history.";
+      errorBanner.classList.add("is-visible");
+    } finally { clearButton.disabled = false; }
+  });
 
   load();
 })();

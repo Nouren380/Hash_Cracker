@@ -1,3 +1,5 @@
+> This directory also contains a standalone mock server. For the integrated app, run `python interface/app.py` from the repository root; see the root README.
+
 # Hash Cracker — Frontend
 
 This is the Frontend only. It is built with Flask/Jinja2 templates, vanilla CSS, and vanilla
@@ -84,3 +86,12 @@ Backend and API are connected:
   `confirmedByBackend: false`).
 
 See `TESTING_REPORT.md` for exactly what was tested and how.
+
+## Redesigned interface
+
+The primary navigation focuses on Dashboard, Crack a hash, and Results. History and Reports are available when the integrated backend is used. Settings remains outside the main navigation.
+The development server and JavaScript-only mock show a demo notice; neither connects to the real
+cracking engine. Hash-type suggestions compare hexadecimal length with the interface's current
+algorithm list, so they are only possibilities and never automatically select an algorithm.
+The copy button uses the browser clipboard where available. Processing feedback is indeterminate:
+the draft backend contract does not supply live progress or a cancellation endpoint.

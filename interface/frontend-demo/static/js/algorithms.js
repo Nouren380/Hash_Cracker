@@ -1,5 +1,5 @@
 const AlgorithmConfig = {
-  confirmedByBackend: false,
+  confirmedByBackend: true,
   attackMethod: {
     id: "dictionary",
     label: "Dictionary Attack"
