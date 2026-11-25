@@ -14,7 +14,7 @@ python interface/app.py
 
 Open http://127.0.0.1:5000. The real Flask application uses `Core/password_list.txt` and stores sessions in `Database/hash_cracker.db` (created automatically and ignored by Git). Set `HASH_CRACKER_WORDLIST` or `HASH_CRACKER_DB` to use alternative local paths. Recovered passwords and attempted candidates are stored in the SQLite database; keep it private.
 
-Try MD5 `e10adc3949ba59abbe56e057f20f883e` using the supplied list. A dictionary attack only finds values present in its wordlist; a missing match does not prove the original value is strong.
+Try MD5 `e10adc3949ba59abbe56e057f20f883e` using the supplied list. The supplied wordlist contains 50,000 distinct entries, including generated case and suffix variations of existing entries. A dictionary attack only finds values present in its wordlist; a missing match does not prove the original value is strong.
 
 The separate `interface/frontend-demo/dev_server.py` and `?mode=mock` are for mock frontend testing; they do not use the real engine. The real app handles one request synchronously and does not provide real-time progress or cancellation. The frontend times out after two minutes; a timed-out server task may continue. The Flask development server binds to localhost and is intended for local training, not public deployment.
 
