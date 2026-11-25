@@ -26,7 +26,27 @@
     const algorithm = AlgorithmConfig.byId(result.algorithm);
     node.querySelector('[data-field="algorithm"]').textContent = algorithm ? algorithm.label : (result.algorithm || 'Not reported');
     const password = typeof result.password === 'string' ? result.password : null;
-    node.querySelector('[data-field="result-label"]').textContent = result.status === 'found' ? 'RECOVERED PASSWORD' : 'RESULT';
+    // A running Flask server may still have the previous template cached after an update.
+    // Upgrade its result field in place so mixed template/script versions remain usable.
+    let resultLabel = node.querySelector('[data-field="result-label"]');
+    if (!resultLabel) {
+      const passwordField = node.querySelector('[data-field="password"]');
+      const oldField = passwordField.closest('.result-field');
+      if (oldField) {
+        oldField.className = 'result-highlight';
+        resultLabel = oldField.querySelector('.field-label');
+        if (resultLabel) resultLabel.className = 'result-highlight-label';
+        const content = document.createElement('div');
+        content.className = 'result-highlight-content';
+        const copyButton = oldField.querySelector('[data-field="copy"]');
+        content.appendChild(passwordField);
+        if (copyButton) content.appendChild(copyButton);
+        oldField.insertBefore(content, oldField.querySelector('[data-field="copy-message"]'));
+        const resultStamp = node.querySelector('[data-field="stamp"]');
+        if (resultStamp) resultStamp.after(oldField);
+      }
+    }
+    if (resultLabel) resultLabel.textContent = result.status === 'found' ? 'RECOVERED PASSWORD' : 'RESULT';
     node.querySelector('[data-field="password"]').textContent = result.status === 'found' && password !== null ? password : result.status === 'not_found' ? 'Not found' : result.status === 'processing' ? 'Processing' : 'Not available';
     node.querySelector('[data-field="duration"]').textContent = Number.isFinite(result.durationMs) ? `${result.durationMs} ms` : 'Not reported';
     const copy = node.querySelector('[data-field="copy"]');
