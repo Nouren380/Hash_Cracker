@@ -3,3 +3,18 @@
 #history-container{overflow-x:auto}.data-table{width:100%;border-collapse:collapse;color:#111}.data-table th,.data-table td{border-bottom:2px solid #111;padding:12px;text-align:left;font-size:13px;overflow-wrap:anywhere}.data-table th{font-weight:900}.banner-warning{display:none}.banner-warning.is-visible{display:block;background:#fff4ba;border:3px solid #111;color:#111;padding:12px;margin-bottom:20px}.stat-box{background:#fffdf4;border:3px solid #111;color:#111;border-radius:0}.stat-box-value,.stat-box-label{color:#111}
 
 #clear-history[hidden]{display:none}
+
+/* The original stylesheet targets textarea.input with higher specificity. */
+textarea.input, textarea.input:focus {
+  background: #fff;
+  color: #111;
+  caret-color: #111;
+  border: 3px solid #111;
+  border-radius: 0;
+  font: 16px/1.5 var(--font-data);
+  min-height: 110px;
+  padding: 13px;
+}
+textarea.input::placeholder { color: #555; opacity: 1; }
+textarea.input:focus-visible { outline: 3px solid #7136e8; outline-offset: 3px; }
+.field.has-error textarea.input { border-color: #a4002a; }
