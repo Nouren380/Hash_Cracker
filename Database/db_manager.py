@@ -1,7 +1,7 @@
 """
 Hash Cracker - Database Management Subsystem
 Module: Database/db_manager.py
-Author: Rashad Sameh
+Authors: Mariam Ashraf Adam and Rashad Sameh
 
 Provides high-performance SQLite operations, session tracking,
 attempt logging, and analytical query helpers for the Hash Cracker application.

@@ -1,7 +1,7 @@
 -- =============================================================================
 -- Hash Cracker - Production SQLite Database Schema
 -- Module: Database/schema.sql
--- Author: Rashad Sameh (Database Subsystem)
+-- Authors: Mariam Ashraf Adam and Rashad Sameh (Database Subsystem)
 -- =============================================================================
 
 PRAGMA foreign_keys = ON;
