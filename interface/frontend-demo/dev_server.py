@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 import time
+import re
 
 app = Flask(__name__)
 
@@ -84,10 +85,13 @@ def settings():
 def api_crack():
     payload = request.get_json(silent=True) or {}
     hash_value = str(payload.get("hash", "")).strip().lower()
-    algorithm = payload.get("algorithm")
+    algorithm = {32: "md5", 40: "sha1", 64: "sha256", 128: "sha512"}.get(len(hash_value))
 
     if not hash_value:
         return jsonify({"error": {"message": "The hash field is required."}}), 400
+
+    if not algorithm or not re.fullmatch(r"[0-9a-f]+", hash_value):
+        return jsonify({"error": {"message": "Unsupported hash format or length."}}), 400
 
     time.sleep(0.4)
     password = DEV_WORDLIST.get(hash_value)

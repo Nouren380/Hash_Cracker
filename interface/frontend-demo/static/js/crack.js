@@ -3,8 +3,6 @@
   const hashInput = document.getElementById('hash-input');
   const hashField = document.getElementById('hash-field');
   const hashError = document.getElementById('hash-error');
-  const suggestion = document.getElementById('hash-suggestion');
-  const algorithmSelect = document.getElementById('algorithm-select');
   const submitButton = document.getElementById('submit-button');
   const loadingMessage = document.getElementById('loading-message');
   const errorBanner = document.getElementById('submit-error-banner');
@@ -16,29 +14,7 @@
     hashError.textContent = '';
   }
 
-  function updateSuggestion() {
-    const hash = hashInput.value.trim();
-    if (!hash) { suggestion.textContent = 'Not sure about the algorithm? Paste a hash to see possible matches.'; return; }
-    if (!/^[a-f0-9]+$/i.test(hash)) { suggestion.textContent = 'Suggestions are available for hexadecimal hashes only.'; return; }
-    const matches = AlgorithmConfig.list.filter(item => item.hexLength === hash.length);
-    suggestion.textContent = matches.length
-      ? `Possible match in this interface: ${matches.map(item => item.label).join(', ')}. Other algorithms can share this length; choose the algorithm you used.`
-      : 'No algorithm in the current list matches this length. Check the hash and algorithm.';
-  }
-
-  // تشغيل مبدئي عشان الرسالة تظهر من أول ما الصفحة تفتح
-  updateSuggestion();
-
-  hashInput.addEventListener('input', () => {
-    clearFieldError();
-    updateSuggestion();
-  });
-
-  // مسح الخطأ لو المستخدم غيّر الخوارزمية
-  algorithmSelect.addEventListener('change', () => {
-    clearFieldError();
-    updateSuggestion();
-  });
+  hashInput.addEventListener('input', clearFieldError);
 
   form.addEventListener('submit', async event => {
     event.preventDefault();
@@ -48,7 +24,7 @@
     errorBanner.textContent = '';
     clearFieldError();
 
-    const outcome = HashValidation.validate(hashInput.value, algorithmSelect.value);
+    const outcome = HashValidation.validate(hashInput.value);
     if (!outcome.valid) {
       hashField.classList.add('has-error');
       hashInput.setAttribute('aria-invalid', 'true');
@@ -63,7 +39,7 @@
     loadingMessage.hidden = false;
 
     try {
-      const result = await HashCrackerApi.submitHash(outcome.normalized, algorithmSelect.value);
+      const result = await HashCrackerApi.submitHash(outcome.normalized);
       sessionStorage.setItem('hashCrackerLastResult', JSON.stringify(result));
       const target = new URL('/results', window.location.origin);
       if (ApiMode.current === 'mock') target.searchParams.set('mode', 'mock');

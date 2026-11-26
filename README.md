@@ -1,7 +1,7 @@
 # Hash Cracker
 
 A local security-training tool for recovering a hash using a dictionary attack.
-Only use it in authorized labs. It supports hexadecimal MD5, SHA-1, SHA-256 and SHA-512.
+Only use it in authorized labs. It tests hexadecimal MD5, SHA-1, SHA-256 and SHA-512 hashes. The server selects which algorithm to test from the hash length. Other algorithms may have the same length, so this is an assumption, not a definitive identification.
 
 ## Run
 

@@ -1,8 +1,6 @@
 # Hash Cracker — Frontend/Backend API Contract
 
-Status: **draft, not yet confirmed by the Backend team.** The Frontend is built against this
-contract. The endpoint paths, field names, and base URL below are proposals, isolated in
-`static/js/api.js`, so the Backend team can change them with a one-file edit on the Frontend side.
+This document describes the integrated Flask API and the standalone frontend mock.
 
 All requests are made from `static/js/api.js`. No other Frontend file talks to the network
 directly.
@@ -21,19 +19,14 @@ Content-Type: application/json
 ### Request body
 
 ```json
-{
-  "hash": "5f4dcc3b5aa765d61d8327deb882cf99",
-  "algorithm": "md5"
-}
+{ "hash": "5f4dcc3b5aa765d61d8327deb882cf99" }
 ```
 
-| Field | Type | Notes |
-|---|---|---|
-| `hash` | string | Trimmed, non-empty, no internal whitespace. |
-| `algorithm` | string | One of the IDs in `static/js/algorithms.js` (`md5`, `sha1`, `sha256`, `sha512`). **Awaiting Backend confirmation of the real supported list.** |
-
-The Frontend never sends a wordlist name, path, or ID, and never sends a Brute Force field —
-Dictionary Attack against the Backend's own configured wordlist is the only attack method.
+The frontend sends only the hash. The backend validates hexadecimal characters and selects
+one supported algorithm by length: 32 for MD5, 40 for SHA-1, 64 for SHA-256, and 128 for
+SHA-512. This is a best-effort assumption: other algorithms can share these lengths. The
+returned `algorithm` is the one actually tested, not definitive identification. Unsupported
+formats and lengths receive HTTP 400. The wordlist and attack method stay on the backend.
 
 ### Expected success response — `200 OK`
 
@@ -117,18 +110,11 @@ GET /api/reports
 }
 ```
 
-## What the Backend team needs to confirm or provide
+## Integration notes
 
-1. The real, final list of supported hash algorithms and their IDs — `static/js/algorithms.js`
-   is a centralized placeholder marked `confirmedByBackend: false` until this is confirmed.
-2. The real base URL / path prefix for the API in production (currently assumed to be `/api`
-   on the same origin as the Flask templates).
-3. Whether `durationMs` and `backendConnected` will actually be populated, or should be removed
-   from the contract.
-4. The exact wording and structure of `error.message` for validation failures versus genuine
-   server/engine errors, so the Frontend can tell them apart if that distinction matters later.
-5. Confirmation that the Wordlist never needs to appear in any request — this contract assumes
-   it stays entirely internal to the Backend.
+The integrated backend supports MD5, SHA-1, SHA-256 and SHA-512. It determines the algorithm
+to test from the hexadecimal hash length. The API base defaults to `/api`, and the wordlist
+remains configured on the backend. Live progress and cancellation are not currently provided.
 
 ## What the Frontend will not do
 
