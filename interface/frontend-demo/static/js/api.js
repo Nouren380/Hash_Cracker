@@ -59,13 +59,13 @@ async function apiRequest(path, options) {
 }
 
 const HashCrackerApi = {
-  submitHash(hash, algorithm) {
+  submitHash(hash) {
     if (ApiMode.current === "mock") {
-      return MockApi.submitHash(hash, algorithm);
+      return MockApi.submitHash(hash);
     }
     return apiRequest(ApiConfig.endpoints.crack, {
       method: "POST",
-      body: { hash: hash, algorithm: algorithm }
+      body: { hash: hash }
     });
   },
 

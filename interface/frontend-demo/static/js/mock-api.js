@@ -17,7 +17,9 @@ function mockDelay(ms) {
 }
 
 const MockApi = {
-  async submitHash(hash, algorithm) {
+  async submitHash(hash) {
+    const algorithm = {32: "md5", 40: "sha1", 64: "sha256", 128: "sha512"}[hash.trim().length];
+    if (!algorithm || !/^[a-f0-9]+$/i.test(hash.trim())) throw new Error("Unsupported hash format or length.");
     await mockDelay(900);
     const normalized = hash.trim().toLowerCase();
     const password = MockApiData.knownPasswords[normalized];

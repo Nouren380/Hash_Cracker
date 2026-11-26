@@ -52,14 +52,17 @@ def error(message, status):
 def api_crack():
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
-        return error("Send a JSON object containing a hash and algorithm.", 400)
-    value, algorithm = payload.get("hash"), payload.get("algorithm")
-    if not isinstance(value, str) or not isinstance(algorithm, str) or algorithm not in SUPPORTED:
-        return error("Provide a hash and a supported algorithm.", 400)
+        return error("Send a JSON object containing a hash.", 400)
+    value = payload.get("hash")
+    if not isinstance(value, str) or not value.strip():
+        return error("Enter a hash value.", 400)
     value = value.strip()
-    name, length = SUPPORTED[algorithm]
-    if len(value) != length or not re.fullmatch(r"[0-9a-fA-F]+", value):
-        return error(f"Expected {length} hexadecimal characters for {name}.", 400)
+    if not re.fullmatch(r"[0-9a-fA-F]+", value):
+        return error("The hash must contain only hexadecimal characters (0-9, a-f).", 400)
+    match = next(((algorithm, name) for algorithm, (name, length) in SUPPORTED.items() if len(value) == length), None)
+    if match is None:
+        return error("Unsupported hash length. Use a hexadecimal hash of 32, 40, 64, or 128 characters.", 400)
+    algorithm, name = match
     if not Path(app.config["WORDLIST_PATH"]).is_file():
         return error("The server wordlist is unavailable.", 503)
     with database() as db:

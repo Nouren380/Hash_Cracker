@@ -1,34 +1,8 @@
 const HashValidation = {
-  validate(rawHash, algorithmId) {
-    const value = rawHash || "";
-
-    if (value.length === 0) {
-      return { valid: false, message: "Enter a hash value." };
-    }
-
-    if (value.trim().length === 0) {
-      return { valid: false, message: "The hash cannot be whitespace only." };
-    }
-
-    const trimmed = value.trim();
-
-    if (/\s/.test(trimmed)) {
-      return { valid: false, message: "The hash cannot contain spaces." };
-    }
-
-    const algorithm = AlgorithmConfig.byId(algorithmId);
-
-    if (!algorithm) {
-      return { valid: false, message: "Select a hash algorithm." };
-    }
-
-    if (algorithm.pattern && !algorithm.pattern.test(trimmed)) {
-      return {
-        valid: false,
-        message: `This does not look like a valid ${algorithm.label} hash (expected ${algorithm.hexLength} hex characters).`
-      };
-    }
-
-    return { valid: true, message: "", normalized: trimmed };
+  validate(rawHash) {
+    const value = (rawHash || "").trim();
+    if (!value) return { valid: false, message: "Enter a hash value." };
+    if (!/^[a-f0-9]+$/i.test(value)) return { valid: false, message: "Use only hexadecimal characters (0-9, a-f), with no spaces." };
+    return { valid: true, message: "", normalized: value };
   }
 };

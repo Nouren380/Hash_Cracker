@@ -82,8 +82,7 @@ Backend and API are connected:
 - Real Dictionary Attack results (only a two-entry in-memory dictionary is simulated here).
 - Persistent History (the mock endpoint always reports `backendConnected: false`).
 - Real Reports content and numbers.
-- The final confirmed algorithm list (`static/js/algorithms.js` is marked
-  `confirmedByBackend: false`).
+- Algorithm detection is simulated in the mock server.
 
 See `TESTING_REPORT.md` for exactly what was tested and how.
 
@@ -91,7 +90,6 @@ See `TESTING_REPORT.md` for exactly what was tested and how.
 
 The primary navigation focuses on Dashboard, Crack a hash, and Results. History and Reports are available when the integrated backend is used. Settings remains outside the main navigation.
 The development server and JavaScript-only mock show a demo notice; neither connects to the real
-cracking engine. Hash-type suggestions compare hexadecimal length with the interface's current
-algorithm list, so they are only possibilities and never automatically select an algorithm.
+cracking engine. The backend selects one supported algorithm using the hash length. Other algorithms can share a length, so the result is a best-effort assumption.
 The copy button uses the browser clipboard where available. Processing feedback is indeterminate:
 the draft backend contract does not supply live progress or a cancellation endpoint.
